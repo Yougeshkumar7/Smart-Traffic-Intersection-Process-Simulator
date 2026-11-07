@@ -5,42 +5,38 @@
 
 #include "process_manager.h"
 
-// Direction names
-const char *directionNames[] = {
+static const char *directionNames[] = {
     "NORTH",
     "SOUTH",
     "EAST",
     "WEST"
 };
 
-// Handle vehicles in one direction
+// Child process displays information about one direction
 void handleDirection(TrafficQueue *queue, Direction direction) {
 
     printf("\n----------------------------------\n");
 
-    printf("Process ID: %d\n", getpid());
+    printf("Child Process ID: %d\n", getpid());
     printf("Parent Process ID: %d\n", getppid());
 
     printf("Managing %s Traffic\n",
            directionNames[direction]);
 
-    printf("Vehicles in Queue: %d\n", queue->count);
+    printf("Vehicles waiting in queue: %d\n",
+           queue->count);
 
-    // Process each vehicle in this queue
-    while (queue->count > 0) {
+    // Display vehicles without removing them
+    for (int i = 0; i < queue->count; i++) {
 
-        Vehicle vehicle = queue->vehicles[queue->front];
+        int index = (queue->front + i) % MAX_VEHICLES;
 
-        printf("\nVehicle ID: %d", vehicle.id);
-        printf("\nDirection: %s",
-               directionNames[vehicle.direction]);
+        Vehicle vehicle = queue->vehicles[index];
 
-        printf("\nVehicle Processed Successfully!\n");
-
-        dequeue(queue);
+        printf("Vehicle ID: %d\n", vehicle.id);
     }
 
-    printf("\n%s Traffic Process Completed.\n",
+    printf("%s Process Completed.\n",
            directionNames[direction]);
 
     printf("----------------------------------\n");
@@ -55,6 +51,7 @@ void startTrafficProcesses(TrafficQueue queues[]) {
 
     printf("Parent Process ID: %d\n", getpid());
 
+    // Create one child for each direction
     for (int i = 0; i < 4; i++) {
 
         pid = fork();
@@ -68,25 +65,33 @@ void startTrafficProcesses(TrafficQueue queues[]) {
         else if (pid == 0) {
 
             // Child process
-            handleDirection(&queues[i], i);
+            handleDirection(&queues[i], (Direction)i);
 
             exit(EXIT_SUCCESS);
         }
     }
 
-    // Parent waits for all four child processes
+    // Parent waits for all child processes
     for (int i = 0; i < 4; i++) {
 
         int status;
 
-        if (wait(&status) == -1) {
+        pid_t finished = wait(&status);
+
+        if (finished == -1) {
+
             perror("wait failed");
         }
+
         else if (WIFEXITED(status)) {
-            printf("\nChild process finished with status: %d\n",
+
+            printf("\nChild process %d finished with status %d.\n",
+                   finished,
                    WEXITSTATUS(status));
         }
     }
 
-    printf("\nAll traffic processes completed.\n");
+    printf("\nAll child processes completed.\n");
+
+    printf("Parent process continues simulation.\n");
 }
