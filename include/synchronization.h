@@ -3,7 +3,7 @@
 
 int initializeSynchronization(void);
 
-void enterIntersection(void);
+int enterIntersection(void);
 void leaveIntersection(void);
 
 void destroySynchronization(void);

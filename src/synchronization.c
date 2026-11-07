@@ -1,64 +1,88 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <errno.h>
 
 #include "synchronization.h"
 
-// Mutex protects shared intersection information
 static pthread_mutex_t intersectionMutex;
-
-// Semaphore controls access to the intersection
 static sem_t intersectionSemaphore;
+static int synchronizationReady = 0;
 
-// Initialize mutex and semaphore
 int initializeSynchronization(void) {
 
     if (pthread_mutex_init(&intersectionMutex, NULL) != 0) {
-        printf("Error initializing mutex.\n");
+        fprintf(stderr, "Error initializing mutex.\n");
         return -1;
     }
 
     if (sem_init(&intersectionSemaphore, 0, 1) != 0) {
-        printf("Error initializing semaphore.\n");
+        perror("Error initializing semaphore");
         pthread_mutex_destroy(&intersectionMutex);
         return -1;
     }
 
-    printf("\nSynchronization initialized successfully.\n");
+    synchronizationReady = 1;
+
+    printf("\nMutex and semaphore initialized successfully.\n");
 
     return 0;
 }
 
-// A vehicle requests permission to enter
-void enterIntersection(void) {
+// Request permission to enter the intersection
+int enterIntersection(void) {
 
-    sem_wait(&intersectionSemaphore);
+    if (!synchronizationReady) {
+        fprintf(stderr, "Synchronization is not initialized.\n");
+        return -1;
+    }
 
-    pthread_mutex_lock(&intersectionMutex);
+    // Wait until the intersection becomes available
+    while (sem_wait(&intersectionSemaphore) == -1) {
 
-    printf("\nVehicle has entered the intersection.\n");
+        if (errno != EINTR) {
+            perror("sem_wait failed");
+            return -1;
+        }
+    }
 
-    pthread_mutex_unlock(&intersectionMutex);
+    // Lock shared intersection information
+    if (pthread_mutex_lock(&intersectionMutex) != 0) {
+        sem_post(&intersectionSemaphore);
+        fprintf(stderr, "Mutex lock failed.\n");
+        return -1;
+    }
+
+    printf("\nIntersection access granted to a vehicle.\n");
+
+    return 0;
 }
 
-// A vehicle leaves the intersection
+// Release the intersection
 void leaveIntersection(void) {
 
-    pthread_mutex_lock(&intersectionMutex);
+    if (!synchronizationReady) {
+        return;
+    }
 
-    printf("Vehicle has left the intersection.\n");
+    printf("Vehicle leaving the intersection.\n");
 
     pthread_mutex_unlock(&intersectionMutex);
 
     sem_post(&intersectionSemaphore);
 }
 
-// Destroy synchronization resources
+// Release synchronization resources
 void destroySynchronization(void) {
 
-    sem_destroy(&intersectionSemaphore);
+    if (!synchronizationReady) {
+        return;
+    }
 
+    sem_destroy(&intersectionSemaphore);
     pthread_mutex_destroy(&intersectionMutex);
+
+    synchronizationReady = 0;
 
     printf("\nSynchronization resources destroyed.\n");
 }
