@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "statistics.h"
 
-// Statistics variables
 static int totalGenerated = 0;
 static int totalProcessed = 0;
 static int totalWaitingTime = 0;
@@ -16,13 +15,13 @@ void initializeStatistics(void) {
     printf("\nTraffic statistics initialized.\n");
 }
 
-// Record a newly generated vehicle
+// Record successfully generated vehicle
 void recordGeneratedVehicle(void) {
 
     totalGenerated++;
 }
 
-// Record a processed vehicle
+// Record successfully processed vehicle
 void recordProcessedVehicle(int waitingTime) {
 
     totalProcessed++;
@@ -32,7 +31,7 @@ void recordProcessedVehicle(int waitingTime) {
     }
 }
 
-// Display simulation statistics
+// Display final statistics
 void displayStatistics(void) {
 
     int totalWaiting = totalGenerated - totalProcessed;
@@ -54,14 +53,12 @@ void displayStatistics(void) {
     printf("========================================\n");
 
     printf("Total Vehicles Generated : %d\n", totalGenerated);
-
     printf("Total Vehicles Processed : %d\n", totalProcessed);
-
     printf("Total Vehicles Waiting   : %d\n", totalWaiting);
-
-    printf("Total Waiting Time       : %d\n", totalWaitingTime);
-
-    printf("Average Waiting Time     : %.2f\n", averageWaitingTime);
+    printf("Total Waiting Time       : %d seconds\n",
+           totalWaitingTime);
+    printf("Average Waiting Time     : %.2f seconds\n",
+           averageWaitingTime);
 
     printf("========================================\n");
 }
