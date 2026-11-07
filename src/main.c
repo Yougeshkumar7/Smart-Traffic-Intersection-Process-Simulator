@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 #include "vehicle.h"
@@ -45,20 +44,12 @@ int main(void) {
     // STEP 4: Initialize statistics
     initializeStatistics();
 
-    // STEP 5: Initialize synchronization
-    printf("\n========== SYNCHRONIZATION ==========\n");
-
-    if (initializeSynchronization() != 0) {
-        printf("Synchronization initialization failed.\n");
-        return 1;
-    }
-
-    // STEP 6: Generate vehicles
+    // STEP 5: Generate vehicles
     printf("\n========== VEHICLE GENERATION ==========\n");
 
     generateVehicles(queues, 12);
 
-    // STEP 7: Display all queues
+    // STEP 6: Display all queues
     printf("\n========== NORTH QUEUE ==========\n");
     displayQueue(queues[NORTH]);
 
@@ -71,49 +62,43 @@ int main(void) {
     printf("\n========== WEST QUEUE ==========\n");
     displayQueue(queues[WEST]);
 
-    // STEP 8: Demonstrate process management
+    // STEP 7: Demonstrate process management
     printf("\n========== PROCESS MANAGEMENT ==========\n");
 
     startTrafficProcesses(queues);
 
-    // STEP 9: Demonstrate IPC using pipes
+    // STEP 8: Demonstrate IPC using pipes
     printf("\n========== INTER-PROCESS COMMUNICATION ==========\n");
 
     demonstrateIPC();
 
-    // STEP 10: Run Banker's Algorithm
+    // STEP 9: Run Banker's Algorithm
     printf("\n========== RESOURCE MANAGEMENT ==========\n");
 
     runBankersAlgorithm();
 
-    // STEP 11: NORTH-SOUTH traffic phase
-    printf("\n========== NORTH-SOUTH TRAFFIC PHASE ==========\n");
+    // STEP 10: Initialize synchronization
+    printf("\n========== SYNCHRONIZATION ==========\n");
 
-    setNorthSouthGreen(signals);
-    displaySignals(signals);
+    if (initializeSynchronization() != 0) {
+        printf("Synchronization initialization failed.\n");
+        return 1;
+    }
 
-    startTrafficThreads(queues);
+    printf("Synchronization initialized successfully.\n");
 
-    setNorthSouthYellow(signals);
-    displaySignals(signals);
+    // STEP 11: Start traffic threads
+    // This function handles both North-South and East-West phases.
+    printf("\n========== TRAFFIC THREAD MANAGEMENT ==========\n");
 
-    // STEP 12: EAST-WEST traffic phase
-    printf("\n========== EAST-WEST TRAFFIC PHASE ==========\n");
+    startTrafficThreads(queues, signals);
 
-    setEastWestGreen(signals);
-    displaySignals(signals);
-
-    startTrafficThreads(queues);
-
-    setEastWestYellow(signals);
-    displaySignals(signals);
-
-    // STEP 13: Display final statistics
+    // STEP 12: Display final statistics
     printf("\n========== FINAL STATISTICS ==========\n");
 
     displayStatistics();
 
-    // STEP 14: Destroy synchronization resources
+    // STEP 13: Destroy synchronization resources
     destroySynchronization();
 
     printf("\n============================================\n");
