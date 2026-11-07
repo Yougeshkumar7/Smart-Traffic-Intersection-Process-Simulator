@@ -3,39 +3,34 @@
 #include <time.h>
 
 #include "vehicle_generator.h"
+#include "statistics.h"
 
 // Generate unique vehicle IDs
 static int nextVehicleID = 1001;
 
 // Initialize random number generator
-void initializeVehicleGenerator() {
-
-    srand(time(NULL));
+void initializeVehicleGenerator(void) {
+    srand((unsigned int)time(NULL));
 }
 
 // Generate one random vehicle
-Vehicle generateVehicle() {
+Vehicle generateVehicle(void) {
 
     Vehicle vehicle;
 
-    // Assign unique ID
     vehicle.id = nextVehicleID++;
 
-    // Generate random vehicle type
     vehicle.type = rand() % 5;
 
-    // Generate random direction
     vehicle.direction = rand() % 4;
 
     // Ambulances get higher priority
     if (vehicle.type == AMBULANCE) {
         vehicle.priority = 2;
-    }
-    else {
+    } else {
         vehicle.priority = 1;
     }
 
-    // Initial waiting time
     vehicle.waiting_time = 0;
 
     return vehicle;
@@ -44,17 +39,31 @@ Vehicle generateVehicle() {
 // Generate multiple vehicles
 void generateVehicles(TrafficQueue queues[], int total) {
 
+    const char *directions[] = {
+        "NORTH", "SOUTH", "EAST", "WEST"
+    };
+
     for (int i = 0; i < total; i++) {
 
-        // Generate a vehicle
         Vehicle vehicle = generateVehicle();
+
+        // Check whether the selected queue is full
+        if (queues[vehicle.direction].count >= MAX_VEHICLES) {
+            printf("\nQueue is full. Vehicle %d could not be added.\n",
+                   vehicle.id);
+            continue;
+        }
 
         // Add vehicle to its direction queue
         enqueue(&queues[vehicle.direction], vehicle);
 
+        // Update statistics only after successful addition
+        recordGeneratedVehicle();
+
         printf("\nVehicle Generated Successfully!");
         printf("\nVehicle ID: %d", vehicle.id);
-        printf("\nDirection: %d", vehicle.direction);
+        printf("\nVehicle Type: %d", vehicle.type);
+        printf("\nDirection: %s", directions[vehicle.direction]);
         printf("\nPriority: %d\n", vehicle.priority);
     }
 }
